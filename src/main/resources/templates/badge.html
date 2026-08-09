@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <meta property="og:type" content="website">
+
+    <meta property="og:title"
+          th:content="${badge.name} + ' is building at HH Goa 2026'">
+
+    <meta property="og:description"
+          th:content="'whoami → ' + ${badge.title} + ' #FrameInGoa'">
+
+    <meta property="og:image"
+          th:content="${badge.imageUrl}">
+
+    <meta property="og:image:width" content="1080">
+    <meta property="og:image:height" content="1350">
+
+    <meta name="twitter:card" content="summary_large_image">
+
+    <meta name="twitter:title"
+          th:content="${badge.name} + ' is building at HH Goa 2026'">
+
+    <meta name="twitter:image"
+          th:content="${badge.imageUrl}">
+
+    <!-- Redirect human visitors to the React page -->
+    <meta http-equiv="refresh"
+          th:content="'0; url=/badge/' + ${badge.id}">
+
+    <style>
+        body {
+            background: #0B1E2D;
+            color: #F6EFE3;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        img {
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<img th:src="${badge.imageUrl}"
+     th:alt="${badge.name} + ' Builder Badge'">
+
+</body>
+</html>
