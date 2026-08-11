@@ -1,16 +1,24 @@
 package com.BuilderBadge.HHframeGenerator.dto;
+
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class BadgeRequest {
 
     private MultipartFile photo;
 
+    @NotBlank(message = "Name is required")
+    @Size(max = 50, message = "Name must be 50 characters or less")
     private String name;
 
+    @Size(max = 30, message = "Role must be 30 characters or less")
     private String role;
 
+    @Size(max = 50, message = "Title must be 50 characters or less")
     private String title;
 
+    @Size(max = 30, message = "Favorite language must be 30 characters or less")
     private String favoriteLanguage;
 
     public BadgeRequest(){}

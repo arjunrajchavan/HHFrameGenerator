@@ -1,6 +1,8 @@
 package com.BuilderBadge.HHframeGenerator.service;
 
 import com.BuilderBadge.HHframeGenerator.dto.BadgeRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,13 @@ import java.io.InputStream;
 
 @Component
 public class BadgeRenderer {
+
+    private static final Logger log = LoggerFactory.getLogger(BadgeRenderer.class);
+
+    // Ensure AWT works on headless Linux servers (Render, Railway, Heroku, etc.)
+    static {
+        System.setProperty("java.awt.headless", "false");
+    }
 
     private static final int W = 1080, H = 1350;
     private static final int FRAME_X = 240, FRAME_Y = 300, FRAME_SIZE = 600, FRAME_RADIUS = 34;
@@ -39,15 +48,19 @@ public class BadgeRenderer {
         try (InputStream is = new ClassPathResource(classpath.substring(1)).getInputStream()) {
             Font f = Font.createFont(Font.TRUETYPE_FONT, is);
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
+            log.info("Loaded font: {}", classpath);
             return f.deriveFont(size);
         } catch (Exception e) {
-            // Font file missing — fall back so rendering still works during the demo
+            // Font file missing or AWT error — log clearly so it's visible in server logs
+            log.error("FONT LOAD FAILED for '{}': {} — falling back to SansSerif. "
+                    + "Ensure font files exist in src/main/resources/fonts/", classpath, e.getMessage());
             return new Font("SansSerif", fallbackStyle, (int) size);
         }
     }
 
     public BufferedImage render(BadgeRequest request) throws IOException {
-        BufferedImage img = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB);
+        // TYPE_INT_ARGB works correctly in headless Linux environments
+        BufferedImage img = new BufferedImage(W, H, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -141,15 +154,12 @@ public class BadgeRenderer {
 
         if (photo != null && !photo.isEmpty()) {
             BufferedImage src = ImageIO.read(photo.getInputStream());
-            if (src != null) {
-                drawCoverFit(g, src, FRAME_X, FRAME_Y, FRAME_SIZE, FRAME_SIZE);
-            } else {
-                g.setColor(new Color(24, 53, 69));
-                g.fillRect(FRAME_X, FRAME_Y, FRAME_SIZE, FRAME_SIZE);
+            if (src == null) {
+                throw new IllegalArgumentException("The uploaded file is not a valid image format or is corrupted");
             }
+            drawCoverFit(g, src, FRAME_X, FRAME_Y, FRAME_SIZE, FRAME_SIZE);
         } else {
-            g.setColor(new Color(24, 53, 69));
-            g.fillRect(FRAME_X, FRAME_Y, FRAME_SIZE, FRAME_SIZE);
+            throw new IllegalArgumentException("Photo file is missing or empty");
         }
 
         g.setClip(oldClip);

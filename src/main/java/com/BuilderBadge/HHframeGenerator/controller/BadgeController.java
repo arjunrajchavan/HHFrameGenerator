@@ -3,8 +3,10 @@ package com.BuilderBadge.HHframeGenerator.controller;
 import com.BuilderBadge.HHframeGenerator.dto.BadgeRequest;
 import com.BuilderBadge.HHframeGenerator.dto.BadgeResponse;
 import com.BuilderBadge.HHframeGenerator.service.BadgeService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -20,8 +22,18 @@ public class BadgeController {
 
     @PostMapping
     public ResponseEntity<BadgeResponse> createBadge(
-            @ModelAttribute BadgeRequest request
+            @Valid @ModelAttribute BadgeRequest request
     ) throws IOException {
+        MultipartFile photo = request.getPhoto();
+        if (photo == null || photo.isEmpty()) {
+            throw new IllegalArgumentException("Photo is required");
+        }
+
+        String contentType = photo.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Uploaded file must be a valid image");
+        }
+
         BadgeResponse response = badgeService.createBadge(request);
         return ResponseEntity.ok(response);
     }
